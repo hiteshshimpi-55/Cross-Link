@@ -1,0 +1,113 @@
+service: crosslinks-service
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: mvp
+  region: ap-south-1
+  apiName: ${self:service}
+  memorySize: 128 # MB
+  timeout: 10 # Seconds
+  environment:
+    DYNAMODB_USER_TABLE_NAME: ${self:custom.userTableName}
+    DYNAMODB_POSTS_TABLE_NAME: ${self:custom.postsTableName}
+    DYNAMODB_CATEGORY_TABLE_NAME: ${self:custom.categoryTableName}
+    DYNAMODB_CATEGORY_POST_MAPPING_TABLE_NAME: ${self:custom.categoryPostMappingTableName}
+
+custom:
+  userTableName: user-table-${self:provider.stage}
+  postsTableName: posts-table-${self:provider.stage}
+  categoryTableName: category-table-${self:provider.stage}
+  categoryPostMappingTableName: category-post-mapping-table-${self:provider.stage}
+
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  createPost:
+    handler: src/createPost.handler
+    name: create-post
+    description: A lambda handler that creates a post based on an API Gateway trigger, and stores info in a DynamoDB table.
+    events:
+      - http:
+          path: /users/{userId}/posts
+          method: POST
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:PutItem"
+        Resource:
+          - Fn::GetAtt: [PostsTable, Arn]
+
+resources:
+  Resources:
+    UserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.userTableName}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 1
+    PostsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.postsTableName}
+        AttributeDefinitions:
+          - AttributeName: postId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: postId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: userPostsIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: postId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 1
+    CategoryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.categoryTableName}
+        AttributeDefinitions:
+          - AttributeName: categoryId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: categoryId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 1
+    CategoryPostMappingTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.categoryPostMappingTableName}
+        AttributeDefinitions:
+          - AttributeName: categoryId
+            AttributeType: S
+          - AttributeName: postId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: categoryId
+            KeyType: HASH
+          - AttributeName: postId
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 1
