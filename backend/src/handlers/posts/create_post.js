@@ -19,7 +19,7 @@ module.exports.handler = async (event) => {
     const post_thumbnail = body.thumbnail;
     const post_source = body.source;
     const post_meta_data = body.meta_data;
-    const userId = event.pathParameters.userId;
+    const userId = event.requestContext.authorizer.principalId;
 
     const itemToBeStored = {
       postId: postId,

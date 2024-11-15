@@ -9,6 +9,7 @@ provider:
   memorySize: 128 # MB
   timeout: 10 # Seconds
   environment:
+    JWT_SECRET: mutton-gang-55
     DYNAMODB_USER_TABLE_NAME: ${self:custom.userTableName}
     DYNAMODB_POSTS_TABLE_NAME: ${self:custom.postsTableName}
     DYNAMODB_CATEGORY_TABLE_NAME: ${self:custom.categoryTableName}
@@ -24,20 +25,65 @@ plugins:
   - serverless-iam-roles-per-function
 
 functions:
+  createUser:
+    handler: src/handlers/users/create_user.handler
+    name: create-user
+    description: A lambda handler that creates a user based on an API Gateway trigger, and stores info in a DynamoDB table.
+    events:
+      - http:
+          path: /user
+          method: POST
+          authorizer:
+            name: myCustomAuthorizer
+            type: TOKEN
+            identitySource: method.request.header.Authorization
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:PutItem"
+        Resource:
+          - Fn::GetAtt: [UserTable, Arn]
+  login:
+    handler: src/handlers/users/login.handler
+    name: login
+    description: A lambda handler that login a user based on an API Gateway trigger, and stores info in a DynamoDB table.
+    events:
+      - http:
+          path: /user/login
+          method: POST
+          authorizer:
+            name: myCustomAuthorizer
+            type: TOKEN
+            identitySource: method.request.header.Authorization
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:GetItem"
+        Resource:
+          - Fn::GetAtt: [UserTable, Arn]
   createPost:
-    handler: src/createPost.handler
+    handler: src/handlers/posts/create_post.handler
     name: create-post
     description: A lambda handler that creates a post based on an API Gateway trigger, and stores info in a DynamoDB table.
     events:
       - http:
-          path: /users/{userId}/posts
+          path: /posts
           method: POST
+          authorizer:
+            name: myCustomAuthorizer
+            type: TOKEN
+            identitySource: method.request.header.Authorization
     iamRoleStatements:
       - Effect: "Allow"
         Action:
           - "dynamodb:PutItem"
         Resource:
           - Fn::GetAtt: [PostsTable, Arn]
+
+  customAuthorizer:
+    handler: src/authorizer.handler
+    name: custom-authorizer
+    description: A custom authorizer for validating tokens.
 
 resources:
   Resources:
