@@ -2,7 +2,7 @@ service: crosslinks-service
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs20.x
   stage: mvp
   region: ap-south-1
   apiName: ${self:service}
