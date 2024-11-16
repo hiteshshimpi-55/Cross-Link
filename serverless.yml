@@ -34,7 +34,7 @@ functions:
           path: /user
           method: POST
           authorizer:
-            name: myCustomAuthorizer
+            name: customAuthorizer
             type: TOKEN
             identitySource: method.request.header.Authorization
     iamRoleStatements:
@@ -52,7 +52,7 @@ functions:
           path: /user/login
           method: POST
           authorizer:
-            name: myCustomAuthorizer
+            name: customAuthorizer
             type: TOKEN
             identitySource: method.request.header.Authorization
     iamRoleStatements:
@@ -70,7 +70,7 @@ functions:
           path: /posts
           method: POST
           authorizer:
-            name: myCustomAuthorizer
+            name: customAuthorizer
             type: TOKEN
             identitySource: method.request.header.Authorization
     iamRoleStatements:
