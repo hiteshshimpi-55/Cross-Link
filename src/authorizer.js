@@ -1,7 +1,7 @@
 'use strict';
 
 const jwt = require('jsonwebtoken');
-
+// pratham
 exports.handler = async (event) => {
     const token = event.authorizationToken;
     const secret = process.env.JWT_SECRET;
