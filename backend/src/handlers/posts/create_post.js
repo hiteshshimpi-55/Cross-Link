@@ -10,6 +10,7 @@ module.exports.handler = async (event) => {
     const body = JSON.parse(event.body);
 
     // Generate post ID by using UUID generator.
+    // testing
     const crypto = require("crypto");
     const postId = crypto.randomUUID();
 
